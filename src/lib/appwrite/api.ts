@@ -1,7 +1,8 @@
-import { ID, ImageGravity, Query } from "appwrite";
+import { ID, ImageGravity, Models, Query } from "appwrite";
 
 import { appwriteConfig, account, databases, storage, avatars } from "./config";
 import { IUpdatePost, INewPost, INewUser, IUpdateUser } from "@/types";
+import { QueryKey } from "@tanstack/react-query";
 
 // SIGN UP
 export async function createUserAccount(user: INewUser) {
@@ -212,11 +213,40 @@ export async function searchPosts(searchTerm: string) {
   }
 }
 
-export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
+// export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
+//   const queries: any[] = [Query.orderDesc("$updatedAt"), Query.limit(9)];
+
+//   if (pageParam) {
+//     queries.push(Query.cursorAfter(pageParam.toString()));
+//   }
+
+//   try {
+//     const posts = await databases.listDocuments(
+//       appwriteConfig.databaseId,
+//       appwriteConfig.postCollectionId,
+//       queries
+//     );
+
+//     if (!posts) throw Error;
+
+//     return posts;
+//   } catch (error) {
+//     console.log(error);
+//   }
+// }
+
+type GetPostsParams = {
+  queryKey: QueryKey;
+  signal: AbortSignal;
+  pageParam?: string; // or whatever type the cursor is
+};
+
+// Define your fetch function
+export async function getInfinitePosts({ queryKey, signal, pageParam }: GetPostsParams): Promise<Models.DocumentList<Models.Document> | undefined> {
   const queries: any[] = [Query.orderDesc("$updatedAt"), Query.limit(9)];
 
   if (pageParam) {
-    queries.push(Query.cursorAfter(pageParam.toString()));
+    queries.push(Query.cursorAfter(pageParam));
   }
 
   try {
@@ -226,11 +256,10 @@ export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
       queries
     );
 
-    if (!posts) throw Error;
-
-    return posts;
+    return posts; 
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    return undefined; // Return undefined in case of error
   }
 }
 

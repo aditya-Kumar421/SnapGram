@@ -1,8 +1,8 @@
-import { ID, ImageGravity, Models, Query } from "appwrite";
+import { ID, ImageGravity, Query } from "appwrite";
 
 import { appwriteConfig, account, databases, storage, avatars } from "./config";
 import { IUpdatePost, INewPost, INewUser, IUpdateUser } from "@/types";
-import { QueryKey } from "@tanstack/react-query";
+
 
 // SIGN UP
 export async function createUserAccount(user: INewUser) {
@@ -213,40 +213,11 @@ export async function searchPosts(searchTerm: string) {
   }
 }
 
-// export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
-//   const queries: any[] = [Query.orderDesc("$updatedAt"), Query.limit(9)];
-
-//   if (pageParam) {
-//     queries.push(Query.cursorAfter(pageParam.toString()));
-//   }
-
-//   try {
-//     const posts = await databases.listDocuments(
-//       appwriteConfig.databaseId,
-//       appwriteConfig.postCollectionId,
-//       queries
-//     );
-
-//     if (!posts) throw Error;
-
-//     return posts;
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
-
-type GetPostsParams = {
-  queryKey: QueryKey;
-  signal: AbortSignal;
-  pageParam?: string; // or whatever type the cursor is
-};
-
-// Define your fetch function
-export async function getInfinitePosts({ queryKey, signal, pageParam }: GetPostsParams): Promise<Models.DocumentList<Models.Document> | undefined> {
+export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
   const queries: any[] = [Query.orderDesc("$updatedAt"), Query.limit(9)];
 
   if (pageParam) {
-    queries.push(Query.cursorAfter(pageParam));
+    queries.push(Query.cursorAfter(pageParam.toString()));
   }
 
   try {
@@ -256,12 +227,14 @@ export async function getInfinitePosts({ queryKey, signal, pageParam }: GetPosts
       queries
     );
 
-    return posts; 
+    if (!posts) throw Error;
+
+    return posts;
   } catch (error) {
-    console.error(error);
-    return undefined; // Return undefined in case of error
+    console.log(error);
   }
 }
+
 
 export async function getPostById(postId?: string) {
   if (!postId) throw Error;
